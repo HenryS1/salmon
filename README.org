@@ -10,11 +10,15 @@ different computations.
 Error handling, missing values, asynchronous computation, parsing and
 more can be modelled with monads.
 
+The term monads is used somewhat loosely in the context of this
+library which only requires candidate monads to implement `fmap` and
+`flatmap`.
+
 ** Comprehensions
 
-Hylo expects that a candidate monad implement fmap and flatmap
-and using those implementations provides a do syntax similar to do
-comprehensions in Haskell and for comprehensions in Scala.
+Hylo uses an implementation of fmap and flatmap to provide a do syntax
+similar to do comprehensions in Haskell and for comprehensions in
+Scala.
 
 In Haskell a monad comprehension looks like this:
 
@@ -29,9 +33,9 @@ In Haskell a monad comprehension looks like this:
 The same pattern is expressed in hylo with
 
 #+begin_src lisp
-  (mdo (<- a '(1 2 3))
-       (let ((c 5)))
-       (<- b '(4 5))
+  (mdo (a '(1 2 3))
+       (let (c 5) (d 6))
+       (b '(4 5))
        (yield (+ a b)))
 #+end_src
 
