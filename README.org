@@ -4,11 +4,11 @@ An extensible foundation for monads in Common Lisp.
 
 ** Why does Lisp need Monads?
 
-Monads provide a uniform interface to error handling and control flow
-for a variety of different computations. 
+Monads provide a uniform interface to control flow for a variety of
+different computations.
 
 Error handling, missing values, asynchronous computation, parsing and
-more can all be modelled with monads.
+more can be modelled with monads.
 
 ** Comprehensions
 
@@ -21,6 +21,7 @@ In Haskell a monad comprehension looks like this:
 #+begin_src haskell
   do 
     a <- [1,2,3]
+    let c = 5
     b <- [4,5]
     return (a + b)
 #+end_src
@@ -29,13 +30,13 @@ The same pattern is expressed in hylo with
 
 #+begin_src lisp
   (mdo (<- a '(1 2 3))
+       (let ((c 5)))
        (<- b '(4 5))
        (yield (+ a b)))
 #+end_src
 
 The `mdo` macro desugars to nested applications of `fmap` and
-`flatmap` which are generic functions that need to be present on your
-type for hylo to use it in a comprehension.
+`flatmap`.
 
 ** Builtin implementations
 
@@ -44,5 +45,5 @@ Vector.
 
 ** Etymology
 
-The name hylo comes from hylomorphism, the fancy name for flatmap
+The name hylo comes from hylomorphism, the fancy name for flatmap,
 which is the essential monadic operation.

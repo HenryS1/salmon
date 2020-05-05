@@ -1,5 +1,8 @@
 (defpackage :monad
-  (:use :cl))
+  (:use :cl)
+  (:export :mdo
+           :fmap
+           :flatmap))
 
 (in-package :monad)
 
