@@ -10,45 +10,6 @@
 
 (defgeneric fmap (fun obj))
 
-(defmethod fmap (fun (l list))
-  (mapcar fun l))
-
-(defmethod flatmap (fun (l list))
-  (reduce #'nconc (mapcar fun l)))
-
-(defmethod fmap (fun (v vector))
-  (map 'vector fun v))
-
-(defmethod fmap (fun (s try:success))
-  (try:success (try:value s)))
-
-(defmethod flatmap (fun (s try:success))
-  (funcall fun (try:value s)))
-
-(defmethod fmap (fun (f try:failure)) f)
-
-(defmethod flatmap (fun (f try:failure)) f)
-
-(defmethod flatmap (fun (v vector))
-  (let* ((vs (fmap fun v))
-         (result (make-array (reduce (lambda (a b) (+ a (length b))) vs :initial-value 0))))
-    (loop with i = 0
-       for v across vs
-       do (loop for el across v
-             do (setf (aref result i) el)
-               (incf i)))
-    result))
-
-(defmethod fmap (fun (maybe:nothing maybe:nothing)) maybe:nothing)
-
-(defmethod fmap (fun (maybe:just maybe:just))
-  (maybe:just (funcall fun (maybe:value maybe:just))))
-
-(defmethod flatmap (fun (maybe:nothing maybe:nothing)) maybe:nothing)
-
-(defmethod flatmap (fun (maybe:just maybe:just))
-  (funcall fun (maybe:value maybe:just)))
-
 (defun transform-clause (&optional (seen-unwrap nil))
   (lambda (acc clause)
     (cond ((eq (car clause) 'let)

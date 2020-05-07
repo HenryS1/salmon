@@ -1,5 +1,6 @@
 (defpackage :try
-  (:use :cl)
+  (:use :cl :monad)
+  (:import-from :monad :fmap :flatmap)
   (:export :success
            :try
            :failure
@@ -32,3 +33,13 @@
 (defmethod print-object ((failure failure) out)
   (print-unreadable-object (failure out :type t)
     (format out "~a" (value failure))))
+
+(defmethod fmap (fun (s success))
+  (success (funcall fun (value s))))
+
+(defmethod flatmap (fun (s success))
+  (funcall fun (value s)))
+
+(defmethod fmap (fun (f failure)) f)
+
+(defmethod flatmap (fun (f failure)) f)
