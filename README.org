@@ -11,8 +11,8 @@ Error handling, missing values, asynchronous computation, parsing and
 more can be modelled with monads.
 
 The term monads is used somewhat loosely in the context of this
-library which only requires candidate monads to implement `fmap` and
-`flatmap`.
+library which only requires candidate monads to implement ~fmap~ and
+~flatmap~.
 
 ** Comprehensions
 
@@ -27,25 +27,104 @@ In Haskell a monad comprehension looks like this:
     a <- [1,2,3]
     let c = 5
     b <- [4,5]
-    return (a + b)
+    return (a + b + c)
 #+end_src
 
 The same pattern is expressed in hylo with
 
 #+begin_src lisp
   (mdo (a '(1 2 3))
-       (let (c 5) (d 6))
+       (let (c 5))
        (b '(4 5))
-       (yield (+ a b)))
+       (yield (+ a b c)))
 #+end_src
 
-The `mdo` macro desugars to nested applications of `fmap` and
-`flatmap`.
+The ~mdo~ macro desugars to nested applications of ~fmap~ and
+~flatmap~.
+
+** The analogy between generic methods and type classes
+
+Lisp's generic methods can be implemented on data separate from the
+definition of that data. This allows generic methods to fulfill a
+similar to type classes from Haskell. The main difference is that
+typeclasses force the implementor to provide all methods in a contract
+while generic methods can be implemented one by one for any data type.
 
 ** Builtin implementations
 
-Hylo comes with builtin monad implementations for Maybe, Try, List and
-Vector.
+Hylo comes with builtin monad implementations for
+
+*** Maybe
+
+Maybe provides a way to handle missing values. ~just~ for when a value
+is present and ~nothing~ for a missing value. An ~mdo~ comprehension
+shortcircuits on ~nothing~.
+
+#+begin_src lisp
+  (mdo (a (maybe:just 15))
+       (b (maybe:just 4))
+       (yield (+ a b)))
+#+end_src
+
+*** Try
+
+Try wraps any conditions in a value to instead of having them
+propagate. The ~try~ macro can be used to handle any conditions. The
+value of the expression is a ~failure~ if a condition occurred and
+otherwise it is a ~success~ with the final value provided in the
+expression (~try~ provides an implicit ~progn~).
+
+#+begin_src lisp
+  (try:try (let ((a 10) 
+                 (b 0))
+             (incf a 4)
+             (/ a b)))
+#+end_src
+
+#+RESULTS:
+: #<TRY:FAILURE arithmetic error DIVISION-BY-ZERO signalled
+: Operation was (/ 14 0).>
+
+In an ~mdo~ comprehension try shortcircuits on failures.
+
+#+begin_src lisp
+  (mdo (a (try:success 15))
+       (b (try:success 4))
+       (yield (+ a b)))
+#+end_src
+
+#+RESULTS:
+: #<TRY:SUCCESS 19>
+
+*** List 
+
+A ~list~ monad comprehension is shortcuited by the empty ~list~. The
+result of a ~list~ monad comprehension uses all combinations of values
+from the unwrapped lists.
+
+#+begin_src lisp
+  (mdo (a '(1 2 3))
+       (b '(4 5 6))
+       (yield (+ a b)))
+#+end_src
+
+#+RESULTS:
+| 5 | 6 | 7 | 6 | 7 | 8 | 7 | 8 | 9 |
+
+*** Vector
+
+A ~vector~ monad comprehension is shortcircuited by the empty
+~vector~. As with lists a ~vector~ monad comprehension uses all
+combinations of values from the unwrapped vectors.
+
+#+begin_src lisp
+  (mdo (a #(1 2 3))
+       (b #(4 5 6))
+       (yield (+ a b)))
+#+end_src
+
+#+RESULTS:
+| 5 | 6 | 7 | 6 | 7 | 8 | 7 | 8 | 9 |
 
 ** Etymology
 
