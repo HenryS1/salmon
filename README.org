@@ -79,6 +79,8 @@ expression (~try~ provides an implicit ~progn~).
                  (b 0))
              (incf a 4)
              (/ a b)))
+  ; #<TRY:FAILURE arithmetic error DIVISION-BY-ZERO signalled
+  ; Operation was (/ 14 0).>
 #+end_src
 
 #+RESULTS:
