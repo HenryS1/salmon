@@ -128,7 +128,3 @@ combinations of values from the unwrapped vectors.
 #+RESULTS:
 | 5 | 6 | 7 | 6 | 7 | 8 | 7 | 8 | 9 |
 
-** Etymology
-
-The name hylo comes from hylomorphism, the fancy name for flatmap,
-which is the essential monadic operation.
