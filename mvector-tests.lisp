@@ -14,5 +14,5 @@
 
 (deftest flatmap-test
   (testing "flatmap returns the elements in order"
-    (ok (vector (monad:flatmap (lambda (x) (vector 1 x)) (vector 2 3 4))
-                (vector 1 2 1 3 1 4)))))
+    (ok (vector-equal (monad:flatmap (lambda (x) (vector 1 x)) (vector 2 3 4))
+                      (vector 1 2 1 3 1 4)))))
