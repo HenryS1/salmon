@@ -14,7 +14,8 @@
   :depends-on ("rove"
                "hylo")
   :components ((:file "maybe-tests")
-               (:file "try-test")
+               (:file "try-tests")
+               (:file "monad-tests")
                (:file "mlist-tests")
                (:file "mvector-tests"))
   :perform (asdf:test-op (o c) (uiop:symbol-call :rove '#:run c)))
