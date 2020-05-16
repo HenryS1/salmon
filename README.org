@@ -64,6 +64,7 @@ shortcircuits on ~nothing~.
   (mdo (a (maybe:just 15))
        (b (maybe:just 4))
        (yield (+ a b)))
+;; #<MAYBE:JUST 19>
 #+end_src
 
 *** Try
@@ -93,10 +94,11 @@ In an ~mdo~ comprehension try shortcircuits on failures.
   (mdo (a (try:success 15))
        (b (try:success 4))
        (yield (+ a b)))
+;; #<TRY:SUCCESS 19>
 #+end_src
 
 #+RESULTS:
-: #<TRY:SUCCESS 19>
+
 
 *** List 
 
@@ -108,10 +110,8 @@ from the unwrapped lists.
   (mdo (a '(1 2 3))
        (b '(4 5 6))
        (yield (+ a b)))
+;; (5 6 7 6 7 8 7 8 9)
 #+end_src
-
-#+RESULTS:
-| 5 | 6 | 7 | 6 | 7 | 8 | 7 | 8 | 9 |
 
 *** Vector
 
@@ -123,8 +123,5 @@ combinations of values from the unwrapped vectors.
   (mdo (a #(1 2 3))
        (b #(4 5 6))
        (yield (+ a b)))
+;; #(5 6 7 6 7 8 7 8 9)
 #+end_src
-
-#+RESULTS:
-| 5 | 6 | 7 | 6 | 7 | 8 | 7 | 8 | 9 |
-
