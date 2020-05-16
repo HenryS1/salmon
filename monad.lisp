@@ -24,7 +24,7 @@
                                     (and (symbolp (car x))
                                          (= (length x) 2))))
                     (butlast exps)))
-    (error "Every clause in mdo must begin with <- or let"))
+    (error "Every clause must either unwrap a monad or bind a value in let"))
   (when (not (string= (caar (last exps)) "YIELD"))
     (error "The final clause in mdo must be a yield"))
   (when (not (= (length (car (last exps))) 2))

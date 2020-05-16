@@ -7,4 +7,4 @@
   (mapcar fun l))
 
 (defmethod flatmap (fun (l list))
-  (reduce #'nconc (mapcar fun l)))
+  (mapcan fun l))
