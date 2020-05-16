@@ -10,7 +10,7 @@
                     (c (maybe:nothing))
                     (yield (+ a b c)))
                'maybe:nothing)
-        "mdo shortcuits when a nothing value occurs")
+        "mdo short circuits when a nothing value occurs")
     (ok (typep (mdo (a (maybe:just 6))
                     (b (maybe:just 4))
                     (yield (+ a b)))
