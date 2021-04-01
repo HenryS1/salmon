@@ -1,22 +1,26 @@
 (defpackage :range
   (:use :cl :monad)
-  (:export :between :to-array :append-ranges :reduce-range :index))
+  (:export :between :to-array :append-ranges :reduce-range :index :memoization
+           :self
+           :size
+           :fmap-rec))
 
 (in-package :range)
 
 (defclass range ()
   ((size :accessor size :initarg :size)
-   (transformation :accessor transformation :initarg :transformation :initform #'identity)))
+   (transformation :accessor transformation :initarg :transformation :initform #'identity)
+   (memoization :accessor memoization :initarg :memoization :initform nil)))
 
-(defun between (start end)
+(defun between (start end &key (memoize nil))
   (make-instance 'range :size (+ (- end start) 1) 
-                 :transformation (lambda (i) (when (<= i (- end start)) (+ i start)))))
+                 :transformation (lambda (i) i)
+                 :memoization (when memoize (lambda (i) i))))
 
 (defun to-array (range &key (type t))
-  (let ((arr (make-array (size range) :element-type type :adjustable nil))
-        (f (transformation range)))
+  (let ((arr (make-array (size range) :element-type type :adjustable nil)))
     (loop for i from 0 to (- (size range) 1)
-       do (setf (aref arr i) (funcall f i)))
+       do (setf (aref arr i) (index range i)))
     arr))
 
 (defun append-ranges (one other)
@@ -31,12 +35,39 @@
     (declare (function one-f other-f new-f))
     (make-instance 'range :size (+ (size one) (size other)) :transformation new-f)))
 
+(defun fib (n)
+  (cond ((= n 0) 1)
+        ((= n 1) 1)
+        (t (+ (fib (- n 1)) (fib (- n 2))))))
+
+(defmacro fmap-rec (f range)
+  (let ((self (intern "SELF" (package-name *package*))))
+    `(let (,self)
+       (setf ,self (fmap ,f ,range)))))
+
+(defmacro mem-lambda (args &rest body)
+  `(let ((table (make-hash-table :test 'equal)))
+     (labels ((self ,args
+                (if (gethash (list ,@args) table)
+                    (gethash (list ,@args) table)
+                    (setf (gethash (list ,@args) table)
+                          ,@body))))
+       #'self)))
+
 (defmethod fmap (f (range range))
-  (declare (optimize (speed 3)))
+  (declare (optimize (speed 3))
+           (function f))
   (let ((old-f (transformation range)))
-    (declare (function old-f f))
+    (declare (function old-f))
     (make-instance 'range :size (size range) 
-                   :transformation (lambda (i) (funcall f (funcall old-f i))))))
+                   :transformation (lambda (i) (funcall f (funcall old-f i)))
+                   :memoization (when (memoization range)
+                                  (let* ((table (make-hash-table :test 'equal)))
+                                    (lambda (i)
+                                      (if (gethash i table)
+                                          (gethash i table)
+                                          (setf (gethash i table) 
+                                                (funcall f (funcall old-f i))))))))))
 
 (defun merge-ranges (f range start end)
   (declare (optimize (speed 3)))
@@ -53,13 +84,17 @@
   (merge-ranges f range 0 (- (size range) 1)))
 
 (defun index (range i)
-  (funcall (transformation range) i))
+  (when (< i (size range))
+    (if (memoization range)
+        (funcall (memoization range) i)
+        (funcall (transformation range) i))))
 
 (defun reduce-range (op range)
-  (declare (optimize (speed 3)))
-  (let ((f (transformation range))
-        (len (- (size range) 1)))
-    (declare (function f op))
+  (declare (optimize (speed 3))
+           (function op))
+  (let ((len  (- (size range) 1))
+        (f (if (memoization range) (memoization range) (transformation range))))
+    (declare (function f))
     (loop for i fixnum from 0 to len
        for e = (funcall f i)
        for result = e then (funcall op result e)
