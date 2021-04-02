@@ -10,7 +10,7 @@
                  (:file "mlist" :depends-on ("monad"))
                  (:file "mvector" :depends-on ("monad")))))
   :description "Provides monad comprehensions in Common Lisp"
-  :in-order-to ((test-op (test-op "salmon-tests"))))
+  :in-order-to ((test-op (test-op "salmon/tests"))))
 
 (defsystem "salmon/tests"
   :depends-on ("rove"
