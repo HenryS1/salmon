@@ -1,3 +1,5 @@
+[[https://github.com/HenryS1/salmon/tree/master][https://github.com/HenryS1/salmon/actions/workflows/ci.yaml/badge.svg]]
+
 * Salmon
 
 An extensible foundation for monads in Common Lisp.
