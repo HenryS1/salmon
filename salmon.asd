@@ -1,4 +1,4 @@
-(asdf:defsystem "hylo"
+(defsystem "salmon"
   :version "0.1.0"
   :author "Henry Steere"
   :license "MIT"
@@ -8,14 +8,14 @@
                (:file "mlist" :depends-on ("monad"))
                (:file "mvector" :depends-on ("monad")))
   :description "Provides monad comprehensions in Common Lisp"
-  :in-order-to ((asdf:test-op (asdf:test-op "hylo-tests"))))
+  :in-order-to ((test-op (test-op "salmon-tests"))))
 
-(asdf:defsystem "hylo-tests"
+(defsystem "salmon-tests"
   :depends-on ("rove"
-               "hylo")
+               "salmon")
   :components ((:file "maybe-tests")
                (:file "try-tests")
                (:file "monad-tests")
                (:file "mlist-tests")
                (:file "mvector-tests"))
-  :perform (asdf:test-op (o c) (uiop:symbol-call :rove '#:run c)))
+  :perform (test-op (o c) (uiop:symbol-call :rove '#:run c)))

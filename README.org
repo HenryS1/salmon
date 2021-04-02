@@ -1,4 +1,4 @@
-* Hylo
+* Salmon
 
 An extensible foundation for monads in Common Lisp.
 
@@ -16,7 +16,7 @@ library which only requires candidate monads to implement ~fmap~ and
 
 ** Comprehensions
 
-Hylo uses an implementation of fmap and flatmap to provide a do syntax
+Salmon uses an implementation of fmap and flatmap to provide a do syntax
 similar to do comprehensions in Haskell and for comprehensions in
 Scala.
 
@@ -30,7 +30,7 @@ In Haskell a monad comprehension looks like this:
     return (a + b + c)
 #+end_src
 
-The same pattern is expressed in hylo with
+The same pattern is expressed in salmon with
 
 #+begin_src lisp
   (mdo (a '(1 2 3))
@@ -52,7 +52,7 @@ while generic methods can be implemented one by one for any data type.
 
 ** Builtin implementations
 
-Hylo comes with builtin monad implementations for
+Salmon comes with builtin monad implementations for
 
 *** Maybe
 
