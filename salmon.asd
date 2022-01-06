@@ -8,7 +8,8 @@
                  (:file "maybe" :depends-on ("monad"))
                  (:file "try" :depends-on ("monad"))
                  (:file "mlist" :depends-on ("monad"))
-                 (:file "mvector" :depends-on ("monad")))))
+                 (:file "mvector" :depends-on ("monad"))
+                 (:file "either" :depends-on ("monad")))))
   :description "Provides monad comprehensions in Common Lisp"
   :in-order-to ((test-op (test-op "salmon/tests"))))
 
@@ -21,5 +22,6 @@
                  (:file "try-tests")
                  (:file "monad-tests")
                  (:file "mlist-tests")
-                 (:file "mvector-tests"))))
+                 (:file "mvector-tests")
+                 (:file "either-tests"))))
   :perform (test-op (o c) (symbol-call :rove '#:run c)))
