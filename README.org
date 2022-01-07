@@ -127,3 +127,20 @@ combinations of values from the unwrapped vectors.
        (yield (+ a b)))
 ;; #(5 6 7 6 7 8 7 8 9)
 #+end_src
+
+*** Either
+
+The either monad provides an alternative mechanism for error handling
+holding either an error, in the left case, or a value, in the right
+case.
+
+#+begin_src lisp
+    (mdo (a (right 10))
+         (b (right 5))
+         (yield (+ a b)))
+  ;; #<RIGHT 15>
+  (mdo (a (right 10))
+       (b (left "error"))
+       (yield (+ a b)))
+  ;; #<LEFT error>
+#+end_src

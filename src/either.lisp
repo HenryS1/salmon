@@ -1,7 +1,7 @@
 (defpackage :either
   (:use :cl :monad)
   (:import-from :monad :fmap :flatmap)
-  (:export :value :right :left))
+  (:export :right :left :right-value :left-err))
 
 (in-package :either)
 

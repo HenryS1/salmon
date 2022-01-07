@@ -9,20 +9,18 @@ jobs:
     strategy:
       matrix:
         lisp: [sbcl-bin, ccl-bin]
-        os: [ubuntu-16.04]
+        os: [ubuntu-18.04]
 
     steps:
       - uses: actions/checkout@v1
-      - name: Install curl
-        run: |
-          sudo apt-get install -y curl
-          sudo apt-get install -y libcurl3
       - name: Install Roswell
         env:
           LISP: ${{ matrix.lisp }}
           ROSWELL_INSTALL_DIR: /usr
         run: |
-          curl -L https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | sh
+          wget https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh
+          chmod +x ./install-for-ci.sh
+          ./install-for-ci.sh          
       - name: Install Rove
         run: ros install rove
       - name: Run tests      
