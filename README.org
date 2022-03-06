@@ -59,8 +59,8 @@ Salmon comes with builtin monad implementations for
 *** Maybe
 
 Maybe provides a way to handle missing values. ~just~ for when a value
-is present and ~nothing~ for a missing value. An ~mdo~ comprehension
-shortcircuits on ~nothing~.
+is present and nil for a missing value. An ~mdo~ comprehension
+shortcircuits on nil.
 
 #+begin_src lisp
   (mdo (a (maybe:just 15))
@@ -80,10 +80,9 @@ expression (~try~ provides an implicit ~progn~).
 #+begin_src lisp
   (try:try (let ((a 10) 
                  (b 0))
-             (incf a 4)
              (/ a b)))
   ; #<TRY:FAILURE arithmetic error DIVISION-BY-ZERO signalled
-  ; Operation was (/ 14 0).>
+  ; Operation was (/ 10 0).>
 #+end_src
 
 #+RESULTS:
@@ -130,9 +129,8 @@ combinations of values from the unwrapped vectors.
 
 *** Either
 
-The either monad provides an alternative mechanism for error handling
-holding either an error, in the left case, or a value, in the right
-case.
+The either monad provides a mechanism for error handling holding
+either an error, in the left case, or a value, in the right case.
 
 #+begin_src lisp
     (mdo (a (right 10))
