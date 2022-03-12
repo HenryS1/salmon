@@ -10,29 +10,50 @@
 
 (defgeneric fmap (fun obj))
 
+(defun ignore-underscore (name) 
+  (if (equal (symbol-name name) (symbol-name '_)) (list `(declare (ignore ,name))) ()))
+
 (defun transform-clause (&optional (seen-unwrap nil))
   (lambda (acc clause)
     (cond ((eq (car clause) 'let)
-           (append `(let ,(cdr clause)) (list acc)))
+           (append `(let ,(cdr clause) 
+                      ,@(ignore-underscore (caadr clause))) (list acc)))
+          ((equal (symbol-name (car clause)) (symbol-name 'handle))
+           `(handler-case 
+                ,acc 
+              (,(cadr clause) ,(caddr clause) ,@(cdddr clause))))
+          ((equal (symbol-name (car clause)) (symbol-name 'with))
+           (if (not seen-unwrap)
+               (progn (setf seen-unwrap t)
+                      `(fmap (lambda (,(caddr clause)) 
+                               ,@(ignore-underscore (caddr clause))
+                              (unwind-protect 
+                                   ,acc
+                                (funcall ,(cadr clause) ,(caddr clause))))
+                            (progn ,@(cdddr clause))))
+               (progn `(flatmap (lambda (,(caddr clause))
+                                  ,@(ignore-underscore (caddr clause))
+                            (unwind-protect
+                                 ,acc
+                              (funcall ,(cadr clause) ,(caddr clause))))
+                          (progn ,@(cdddr clause))))))
           ((not seen-unwrap)
            (setf seen-unwrap t)
-           `(fmap (lambda (,(car clause)) ,acc) ,(cadr clause)))
-          (t `(flatmap (lambda (,(car clause)) ,acc) ,(cadr clause))))))
+           `(fmap (lambda (,(car clause)) 
+                    ,@(ignore-underscore (car clause))
+                    ,acc) 
+                  (progn ,@(cdr clause))))
+          (t `(flatmap (lambda (,(car clause))
+                         ,@(ignore-underscore (car clause))
+                         ,acc) (progn ,@(cdr clause)))))))
 
 (defun check-clauses (exps)
-  (when (not (every (lambda (x) (or (eq (car x) 'let)
-                                    (and (symbolp (car x))
-                                         (= (length x) 2))))
-                    (butlast exps)))
-    (error "Every clause must either unwrap a monad or bind a value in let"))
   (when (not (string= (caar (last exps)) "YIELD"))
-    (error "The final clause in mdo must be a yield"))
-  (when (not (= (length (car (last exps))) 2))
-    (error "The yield clause in mdo must only contain one candidate result")))
+    (error "The final clause in mdo must be a yield")))
 
 (defun transform-mdo (exps)
   (let ((reversed (reverse exps)))
-    (reduce (transform-clause) (cdr reversed) :initial-value (cadr (car reversed)))))
+    (reduce (transform-clause) (cdr reversed) :initial-value `(progn ,@(cdr (car reversed))))))
 
 (defmacro mdo (&rest exps)
   (check-clauses exps)

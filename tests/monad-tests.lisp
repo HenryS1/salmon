@@ -1,5 +1,5 @@
 (defpackage :monad-tests
-  (:use :cl :rove :monad))
+  (:use :cl :rove :monad :either))
 
 (in-package :monad-tests)
 
@@ -39,3 +39,30 @@
                      (yield (+ a b c d e)))
                 (maybe:just 22))
         "mdo binds values in multiple let clauses")))
+
+(deftest error-handling
+  (testing "mdo handles errors in a yield clause"
+    (ok (equalp (mdo (handle division-by-zero () (left "Error occurred"))
+                     (a (right 0))
+                     (yield (/ 10 a))) 
+                (left "Error occurred"))))
+  (testing "mdo handles errors in a body clause"
+    (ok (equalp (mdo (handle division-by-zero () (left "Error occurred"))
+                     (a (right (/ 1 0)))
+                     (b (right 2))
+                     (yield (+ a b)))
+                (left "Error occurred")))))
+
+(deftest resource-management
+  (testing "with clause calls tidy up function after executing"
+    (let ((f (open "test.tst" :direction :output :if-exists :error)))
+      (ok (probe-file "test.tst"))
+      (ok (equalp 
+           (mdo (with (lambda (f) (progn (close f) (delete-file "test.tst"))) writer (right f))
+                (_ (format writer "hello~%") (right (finish-output writer)))
+                (handle error (e) (left (format nil "Error reading file ~a" e)))
+                (with #'close reader (right (open "test.tst" :direction :input)))
+                (b (right (read-line reader nil nil)))
+                (yield b))
+           (right "hello")))
+      (ok (not (probe-file "test.tst"))))))

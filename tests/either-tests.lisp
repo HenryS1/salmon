@@ -18,6 +18,6 @@
   (testing "flatmap flattens the result of applying a function to the value in a right"
     (let ((fun (lambda (x) (right (+ x 1)))))
       (ok (equalp (monad:flatmap fun (right 10)) (right 11))))
-    (let ((fun (lambda (x) (left "an error"))))
+    (let ((fun (lambda (x) (declare (ignore x)) (left "an error"))))
       (ok (equalp (monad:flatmap fun (right 10)) (left "an error"))))))
 
