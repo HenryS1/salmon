@@ -42,7 +42,6 @@
              (if (not seen-unwrap)
                  (progn (setf seen-unwrap t)
                         `(fmap (lambda (,(caddr clause)) 
-                                 ,@(ignore-underscore (caddr clause))
                                  (handler-case 
                                      ,acc
                                    (error (,e)
@@ -50,7 +49,6 @@
                                      (error ,e))))
                                (progn ,@(cdddr clause))))
                  `(flatmap (lambda (,(caddr clause))
-                             ,@(ignore-underscore (caddr clause))
                              (handler-case
                                  ,acc
                                (error (,e) 
