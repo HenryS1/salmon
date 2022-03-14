@@ -31,12 +31,30 @@
                                    ,acc
                                 (funcall ,(cadr clause) ,(caddr clause))))
                             (progn ,@(cdddr clause))))
-               (progn `(flatmap (lambda (,(caddr clause))
+               `(flatmap (lambda (,(caddr clause))
                                   ,@(ignore-underscore (caddr clause))
                             (unwind-protect
                                  ,acc
                               (funcall ,(cadr clause) ,(caddr clause))))
-                          (progn ,@(cdddr clause))))))
+                          (progn ,@(cdddr clause)))))
+          ((equal (symbol-name (car clause)) (symbol-name 'clean-on-error))
+           (let ((e (gensym)))
+             (if (not seen-unwrap)
+                 (progn (setf seen-unwrap t)
+                        `(fmap (lambda (,(caddr clause)) 
+                                 (handler-case 
+                                     ,acc
+                                   (error (,e)
+                                     (funcall ,(cadr clause) ,(caddr clause))
+                                     (error ,e))))
+                               (progn ,@(cdddr clause))))
+                 `(flatmap (lambda (,(caddr clause))
+                             (handler-case
+                                 ,acc
+                               (error (,e) 
+                                 (funcall ,(cadr clause) ,(caddr clause))
+                                 (error ,e))))
+                           (progn ,@(cdddr clause))))))
           ((not seen-unwrap)
            (setf seen-unwrap t)
            `(fmap (lambda (,(car clause)) 

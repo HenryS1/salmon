@@ -53,8 +53,8 @@
                      (yield (+ a b)))
                 (left "Error occurred")))))
 
-(deftest resource-management
-  (testing "with clause calls tidy up function after executing"
+(deftest with-resource-management
+  (testing "with clause calls tidy up function after executing without error"
     (let ((f (open "test.tst" :direction :output :if-exists :error)))
       (ok (probe-file "test.tst"))
       (ok (equalp 
@@ -65,4 +65,45 @@
                 (b (right (read-line reader nil nil)))
                 (yield b))
            (right "hello")))
+      (ok (not (probe-file "test.tst")))))
+  (testing "with clause calls tidy up function after executing with error"
+    (let ((f (open "test.tst" :direction :output :if-exists :error)))
+      (ok (probe-file "test.tst"))
+      (ok (equalp 
+           (mdo (with (lambda (f) (progn (close f) (delete-file "test.tst"))) writer (right f))
+                (_ (format writer "hello~%") (right (finish-output writer)))
+                (handle error () (left "Error occurred"))
+                (with #'close reader (right (open "test.tst" :direction :input)))
+                (a (right 0))
+                (_ (right (read-line reader nil nil)))
+                (c (right (/ 1 a)))
+                (yield c))
+           (left "Error occurred")))
       (ok (not (probe-file "test.tst"))))))
+
+(deftest clean-on-error
+  (testing "calls the tidy up function if an error occurs"
+    (let ((f (open "test.tst" :direction :output :if-exists :error)))
+      (ok (probe-file "test.tst"))
+      (ok (equalp 
+           (mdo (handle error () (left "An error occurred"))
+                (clean-on-error (lambda (f) (progn (close f) (delete-file "test.tst")))
+                                writer (right f))
+                (_ (format writer "hello~%") (right (finish-output writer)))
+                (c (right 0))
+                (b (right (/ 1 c)))
+                (yield b))
+           (left "An error occurred")))
+      (ok (not (probe-file "test.tst")))))
+  (testing "doesn't call the tidy up function an no error occurs"
+    (unwind-protect (let ((f (open "test.tst" :direction :output :if-exists :error)))
+       (ok (probe-file "test.tst"))
+       (ok (equalp 
+            (mdo (handle error () (left "An error occurred"))
+                 (clean-on-error (lambda (f) (progn (close f) (delete-file "test.tst")))
+                                 writer (right f))
+                 (_ (format writer "hello~%") (right (finish-output writer)))
+                 (yield "ok"))
+            (right "ok")))
+       (ok (probe-file "test.tst")))
+      (when (probe-file "test.tst") (delete-file "test.tst")))))
