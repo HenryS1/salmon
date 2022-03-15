@@ -21,3 +21,12 @@
     (let ((fun (lambda (x) (declare (ignore x)) (left "an error"))))
       (ok (equalp (monad:flatmap fun (right 10)) (left "an error"))))))
 
+(deftest if-absent
+  (let ((table (make-hash-table :test 'equal)))
+    (setf (gethash "hello" table) "there")
+    (testing "returns error value when option is nil"
+      (ok (equalp (if-absent (gethash "absent" table) "not found")
+                  (left "not found"))))
+    (testing "returns value when option is not nil"
+      (ok (equalp (if-absent (gethash "hello" table) "not found")
+                  (right "there"))))))
