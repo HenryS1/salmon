@@ -1,7 +1,7 @@
 (defpackage :either
   (:use :cl :monad)
   (:import-from :monad :fmap :flatmap)
-  (:export :right :left :right-value :left-err))
+  (:export :right :left :right-value :left-err :if-absent))
 
 (in-package :either)
 
@@ -10,6 +10,8 @@
 
 (defun left (e) (make-left :err e))
 (defun right (v) (make-right :value v))
+
+(defun if-absent (v err) (or (and v (right v)) (left err)))
 
 (defmethod print-object ((left left) out)
   (print-unreadable-object (left out :type t)
