@@ -13,57 +13,62 @@
 (defun ignore-underscore (name) 
   (if (equal (symbol-name name) (symbol-name '_)) (list `(declare (ignore ,name))) ()))
 
-(defun transform-clause (&optional (seen-unwrap nil))
-  (lambda (acc clause)
+(defun transform-clause (acc clause)
+  (destructuring-bind (clauses . seen-unwrap) acc
     (cond ((eq (car clause) 'let)
-           (append `(let ,(cdr clause) 
-                      ,@(ignore-underscore (caadr clause))) (list acc)))
+           (cons (append `(let ,(cdr clause) 
+                            ,@(ignore-underscore (caadr clause))) (list clauses))
+                 seen-unwrap))
           ((equal (symbol-name (car clause)) (symbol-name 'handle))
-           `(handler-case 
-                ,acc 
-              (,(cadr clause) ,(caddr clause) ,@(cdddr clause))))
+           (cons `(handler-case 
+                      ,clauses 
+                    (,(cadr clause) ,(caddr clause) ,@(cdddr clause)))
+                 seen-unwrap))
           ((equal (symbol-name (car clause)) (symbol-name 'with))
            (if (not seen-unwrap)
-               (progn (setf seen-unwrap t)
-                      `(fmap (lambda (,(caddr clause)) 
-                               ,@(ignore-underscore (caddr clause))
+               (cons `(fmap (lambda (,(caddr clause)) 
+                              ,@(ignore-underscore (caddr clause))
                               (unwind-protect 
-                                   ,acc
+                                   ,clauses
                                 (funcall ,(cadr clause) ,(caddr clause))))
-                            (progn ,@(cdddr clause))))
-               `(flatmap (lambda (,(caddr clause))
-                                  ,@(ignore-underscore (caddr clause))
-                            (unwind-protect
-                                 ,acc
-                              (funcall ,(cadr clause) ,(caddr clause))))
-                          (progn ,@(cdddr clause)))))
+                            (progn ,@(cdddr clause)))
+                     t)
+               (cons `(flatmap (lambda (,(caddr clause))
+                                 ,@(ignore-underscore (caddr clause))
+                                 (unwind-protect
+                                      ,clauses
+                                   (funcall ,(cadr clause) ,(caddr clause))))
+                               (progn ,@(cdddr clause)))
+                     seen-unwrap)))
           ((equal (symbol-name (car clause)) (symbol-name 'clean-on-error))
            (let ((e (gensym)))
              (if (not seen-unwrap)
-                 (progn (setf seen-unwrap t)
-                        `(fmap (lambda (,(caddr clause)) 
-                                 (handler-case 
-                                     ,acc
-                                   (error (,e)
-                                     (funcall ,(cadr clause) ,(caddr clause))
-                                     (error ,e))))
-                               (progn ,@(cdddr clause))))
-                 `(flatmap (lambda (,(caddr clause))
-                             (handler-case
-                                 ,acc
-                               (error (,e) 
-                                 (funcall ,(cadr clause) ,(caddr clause))
-                                 (error ,e))))
-                           (progn ,@(cdddr clause))))))
+                 (cons `(fmap (lambda (,(caddr clause)) 
+                                (handler-case 
+                                    ,clauses
+                                  (error (,e)
+                                    (funcall ,(cadr clause) ,(caddr clause))
+                                    (error ,e))))
+                              (progn ,@(cdddr clause)))
+                       t)
+                 (cons `(flatmap (lambda (,(caddr clause))
+                                   (handler-case
+                                       ,clauses
+                                     (error (,e) 
+                                       (funcall ,(cadr clause) ,(caddr clause))
+                                       (error ,e))))
+                                 (progn ,@(cdddr clause)))
+                       seen-unwrap))))
           ((not seen-unwrap)
-           (setf seen-unwrap t)
-           `(fmap (lambda (,(car clause)) 
-                    ,@(ignore-underscore (car clause))
-                    ,acc) 
-                  (progn ,@(cdr clause))))
-          (t `(flatmap (lambda (,(car clause))
-                         ,@(ignore-underscore (car clause))
-                         ,acc) (progn ,@(cdr clause)))))))
+           (cons `(fmap (lambda (,(car clause)) 
+                          ,@(ignore-underscore (car clause))
+                          ,clauses) 
+                        (progn ,@(cdr clause)))
+                 t))
+          (t (cons `(flatmap (lambda (,(car clause))
+                               ,@(ignore-underscore (car clause))
+                               ,clauses) (progn ,@(cdr clause)))
+                   seen-unwrap)))))
 
 (defun check-clauses (exps)
   (when (not (string= (caar (last exps)) "YIELD"))
@@ -71,7 +76,8 @@
 
 (defun transform-mdo (exps)
   (let ((reversed (reverse exps)))
-    (reduce (transform-clause) (cdr reversed) :initial-value `(progn ,@(cdr (car reversed))))))
+    (car (reduce #'transform-clause (cdr reversed) 
+                 :initial-value (cons `(progn ,@(cdr (car reversed))) nil)))))
 
 (defmacro mdo (&rest exps)
   (check-clauses exps)
