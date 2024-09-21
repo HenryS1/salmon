@@ -21,8 +21,14 @@ jobs:
           wget https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh
           chmod +x ./install-for-ci.sh
           ./install-for-ci.sh          
+
+      - name: Download dissect
+        run: |
+          wget -q -O- https://dist.shirakumo.org/archives/dissect/dissect-a70cabcd748cf7c041196efd711e2dcca2bbbb2c.tgz | tar -xz -C ~/.roswell/local-projects
+
       - name: Install Rove
         run: ros install rove
+
       - name: Run tests      
         run: |
           PATH="~/.roswell/bin:$PATH"
